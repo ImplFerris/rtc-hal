@@ -2,24 +2,28 @@
 //!
 //! This module provides a standardized error handling framework for RTC drivers,
 //! allowing consistent error categorization across different RTC hardware implementations.
-//!
-//! ## Error Categories
-//!
-//! RTC operations can fail in several predictable ways:
-//! - **Bus errors**: I2C/SPI communication failures
-//! - **Invalid input**: Out-of-range date/time values
-//! - **Hardware issues**: Clock not running, oscillator stopped
-//! - **Other**: Implementation-specific errors
 
 /// Common categories of errors for RTC drivers
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ErrorKind {
+    // Errors related to core traits
     /// Underlying bus error (I2C, SPI, etc.)
     Bus,
     /// Invalid date/time value provided
-    InvalidInput,
-    /// The RTC is not running (e.g. oscillator stopped)
-    NotRunning,
+    InvalidDateTime,
+
+    // Errors related to extended
+    /// Invalid alarm configuration
+    InvalidAlarmConfig,
+    /// The specified square wave frequency is not supported by the RTC
+    UnsupportedSqwFrequency,
+    /// Invalid register address
+    InvalidAddress,
+    /// NVRAM address out of bounds
+    NvramOutOfBounds,
+    /// NVRAM is write protected
+    NvramWriteProtected,
+
     /// Any other error not covered above
     Other,
 }
@@ -39,7 +43,11 @@ mod tests {
     enum MockRtcError {
         I2cError,
         InvalidDateTime,
-        ClockStopped,
+        InvalidAlarmTime,
+        UnsupportedSqwFrequency,
+        InvalidRegisterAddress,
+        NvramAddressOutOfBounds,
+        NvramWriteProtected,
         UnknownError,
     }
 
@@ -47,8 +55,12 @@ mod tests {
         fn kind(&self) -> ErrorKind {
             match self {
                 MockRtcError::I2cError => ErrorKind::Bus,
-                MockRtcError::InvalidDateTime => ErrorKind::InvalidInput,
-                MockRtcError::ClockStopped => ErrorKind::NotRunning,
+                MockRtcError::InvalidDateTime => ErrorKind::InvalidDateTime,
+                MockRtcError::InvalidAlarmTime => ErrorKind::InvalidAlarmConfig,
+                MockRtcError::UnsupportedSqwFrequency => ErrorKind::UnsupportedSqwFrequency,
+                MockRtcError::InvalidRegisterAddress => ErrorKind::InvalidAddress,
+                MockRtcError::NvramAddressOutOfBounds => ErrorKind::NvramOutOfBounds,
+                MockRtcError::NvramWriteProtected => ErrorKind::NvramWriteProtected,
                 MockRtcError::UnknownError => ErrorKind::Other,
             }
         }
@@ -59,15 +71,39 @@ mod tests {
         assert_eq!(MockRtcError::I2cError.kind(), ErrorKind::Bus);
         assert_eq!(
             MockRtcError::InvalidDateTime.kind(),
-            ErrorKind::InvalidInput
+            ErrorKind::InvalidDateTime
         );
-        assert_eq!(MockRtcError::ClockStopped.kind(), ErrorKind::NotRunning);
+        assert_eq!(
+            MockRtcError::InvalidAlarmTime.kind(),
+            ErrorKind::InvalidAlarmConfig
+        );
+        assert_eq!(
+            MockRtcError::UnsupportedSqwFrequency.kind(),
+            ErrorKind::UnsupportedSqwFrequency
+        );
+        assert_eq!(
+            MockRtcError::InvalidRegisterAddress.kind(),
+            ErrorKind::InvalidAddress
+        );
+        assert_eq!(
+            MockRtcError::NvramAddressOutOfBounds.kind(),
+            ErrorKind::NvramOutOfBounds
+        );
+        assert_eq!(
+            MockRtcError::NvramWriteProtected.kind(),
+            ErrorKind::NvramWriteProtected
+        );
         assert_eq!(MockRtcError::UnknownError.kind(), ErrorKind::Other);
     }
 
     #[test]
     fn test_error_kind_equality() {
         assert_eq!(ErrorKind::Bus, ErrorKind::Bus);
-        assert_ne!(ErrorKind::Bus, ErrorKind::InvalidInput);
+        assert_ne!(ErrorKind::Bus, ErrorKind::InvalidDateTime);
+        assert_ne!(
+            ErrorKind::InvalidAlarmConfig,
+            ErrorKind::UnsupportedSqwFrequency
+        );
+        assert_ne!(ErrorKind::NvramOutOfBounds, ErrorKind::NvramWriteProtected);
     }
 }

@@ -13,3 +13,4 @@ pub mod datetime;
 pub mod error;
 pub mod nvram;
 pub mod rtc;
+pub mod square_wave;
