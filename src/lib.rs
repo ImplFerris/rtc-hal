@@ -9,6 +9,7 @@
 #![warn(missing_docs)]
 
 pub mod bcd;
+pub mod control;
 pub mod datetime;
 pub mod error;
 pub mod nvram;

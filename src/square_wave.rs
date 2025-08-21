@@ -47,8 +47,11 @@ impl SquareWaveFreq {
 
 /// Square wave functionality trait
 pub trait SquareWave: Rtc {
-    /// Enable square wave output with specified frequency
-    fn enable_square_wave(&mut self, freq: SquareWaveFreq) -> Result<(), Self::Error>;
+    /// Configure Frequency and enable square wave
+    fn start_square_wave(&mut self, freq: SquareWaveFreq) -> Result<(), Self::Error>;
+
+    /// Enable square wave output
+    fn enable_square_wave(&mut self) -> Result<(), Self::Error>;
 
     /// Disable square wave output
     fn disable_square_wave(&mut self) -> Result<(), Self::Error>;
