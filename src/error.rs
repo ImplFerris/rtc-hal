@@ -5,6 +5,7 @@
 
 /// Common categories of errors for RTC drivers
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum ErrorKind {
     // Errors related to core traits
     /// Underlying bus error (I2C, SPI, etc.)
@@ -28,10 +29,57 @@ pub enum ErrorKind {
     Other,
 }
 
-/// Trait that RTC driver error types should implement
-pub trait RtcError {
+/// Trait that RTC driver error types should implement.
+///
+/// Allows converting driver-specific errors into standard categories.
+/// Drivers can either define custom error types or use `ErrorKind` directly.
+pub trait Error {
     /// Map a driver-specific error into a general category
     fn kind(&self) -> ErrorKind;
+}
+
+/// RTC error type trait.
+///
+/// This just defines the error type, to be used by the other traits.
+pub trait ErrorType {
+    /// Error type
+    type Error: Error;
+}
+
+/// Allows `ErrorKind` to be used directly as an error type.
+///
+/// Simple drivers can use `type Error = ErrorKind` instead of defining custom errors.
+impl Error for ErrorKind {
+    #[inline]
+    fn kind(&self) -> ErrorKind {
+        *self
+    }
+}
+
+// blanket impl for all `&mut T`
+impl<T: ErrorType + ?Sized> ErrorType for &mut T {
+    type Error = T::Error;
+}
+
+impl core::fmt::Display for ErrorKind {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            Self::Bus => write!(f, "Underlying bus error occurred"),
+            Self::InvalidDateTime => write!(f, "Invalid datetime value provided"),
+            Self::InvalidAlarmConfig => write!(f, "Invalid alarm configuration"),
+            Self::UnsupportedSqwFrequency => write!(
+                f,
+                "The specified square wave frequency is not supported by the RTC"
+            ),
+            Self::InvalidAddress => write!(f, "Invalid register address"),
+            Self::NvramOutOfBounds => write!(f, "NVRAM address out of bounds"),
+            Self::NvramWriteProtected => write!(f, "NVRAM is write protected"),
+            Self::Other => write!(
+                f,
+                "A different error occurred. The original error may contain more information"
+            ),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -51,7 +99,7 @@ mod tests {
         UnknownError,
     }
 
-    impl RtcError for MockRtcError {
+    impl Error for MockRtcError {
         fn kind(&self) -> ErrorKind {
             match self {
                 MockRtcError::I2cError => ErrorKind::Bus,

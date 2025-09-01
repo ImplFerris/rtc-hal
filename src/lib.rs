@@ -8,6 +8,7 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod alarm;
 pub mod bcd;
 pub mod control;
 pub mod datetime;
