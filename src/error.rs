@@ -33,7 +33,7 @@ pub enum ErrorKind {
 ///
 /// Allows converting driver-specific errors into standard categories.
 /// Drivers can either define custom error types or use `ErrorKind` directly.
-pub trait Error {
+pub trait Error: core::fmt::Debug {
     /// Map a driver-specific error into a general category
     fn kind(&self) -> ErrorKind;
 }
