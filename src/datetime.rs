@@ -25,6 +25,7 @@
 
 /// Errors that can occur when working with DateTime
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "defmt", derive(defmt::Format))]
 pub enum DateTimeError {
     /// Invalid month value
     InvalidMonth,
