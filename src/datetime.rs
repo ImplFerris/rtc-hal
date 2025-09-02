@@ -45,13 +45,13 @@ pub enum DateTimeError {
 impl core::fmt::Display for DateTimeError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            DateTimeError::InvalidMonth => write!(f, "invalid month value"),
-            DateTimeError::InvalidDay => write!(f, "invalid day value"),
-            DateTimeError::InvalidHour => write!(f, "invalid hour value"),
-            DateTimeError::InvalidMinute => write!(f, "invalid minute value"),
-            DateTimeError::InvalidSecond => write!(f, "invalid second value"),
-            DateTimeError::InvalidWeekday => write!(f, "invalid weekday value"),
-            DateTimeError::InvalidYear => write!(f, "invalid year value"),
+            DateTimeError::InvalidMonth => write!(f, "invalid month"),
+            DateTimeError::InvalidDay => write!(f, "invalid day"),
+            DateTimeError::InvalidHour => write!(f, "invalid hour"),
+            DateTimeError::InvalidMinute => write!(f, "invalid minute"),
+            DateTimeError::InvalidSecond => write!(f, "invalid second"),
+            DateTimeError::InvalidWeekday => write!(f, "invalid weekday"),
+            DateTimeError::InvalidYear => write!(f, "invalid year"),
         }
     }
 }
@@ -611,34 +611,22 @@ mod tests {
 
     #[test]
     fn test_display_datetime_error() {
-        assert_eq!(
-            format!("{}", DateTimeError::InvalidMonth),
-            "invalid month value"
-        );
-        assert_eq!(
-            format!("{}", DateTimeError::InvalidDay),
-            "invalid day value"
-        );
-        assert_eq!(
-            format!("{}", DateTimeError::InvalidHour),
-            "invalid hour value"
-        );
+        assert_eq!(format!("{}", DateTimeError::InvalidMonth), "invalid month");
+        assert_eq!(format!("{}", DateTimeError::InvalidDay), "invalid day");
+        assert_eq!(format!("{}", DateTimeError::InvalidHour), "invalid hour");
         assert_eq!(
             format!("{}", DateTimeError::InvalidMinute),
-            "invalid minute value"
+            "invalid minute"
         );
         assert_eq!(
             format!("{}", DateTimeError::InvalidSecond),
-            "invalid second value"
+            "invalid second"
         );
         assert_eq!(
             format!("{}", DateTimeError::InvalidWeekday),
-            "invalid weekday value"
+            "invalid weekday"
         );
-        assert_eq!(
-            format!("{}", DateTimeError::InvalidYear),
-            "invalid year value"
-        );
+        assert_eq!(format!("{}", DateTimeError::InvalidYear), "invalid year");
     }
 
     #[test]
