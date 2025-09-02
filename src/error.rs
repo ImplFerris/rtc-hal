@@ -154,4 +154,53 @@ mod tests {
         );
         assert_ne!(ErrorKind::NvramOutOfBounds, ErrorKind::NvramWriteProtected);
     }
+
+    #[test]
+    fn test_error_kind_returns_self() {
+        let error = ErrorKind::Other;
+        assert_eq!(error.kind(), ErrorKind::Other);
+    }
+
+    #[test]
+    fn test_error_kind_display_messages() {
+        assert_eq!(
+            format!("{}", ErrorKind::Bus),
+            "Underlying bus error occurred"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::InvalidDateTime),
+            "Invalid datetime value provided"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::InvalidAlarmConfig),
+            "Invalid alarm configuration"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::UnsupportedSqwFrequency),
+            "The specified square wave frequency is not supported by the RTC"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::InvalidAddress),
+            "Invalid register address"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::NvramOutOfBounds),
+            "NVRAM address out of bounds"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::NvramWriteProtected),
+            "NVRAM is write protected"
+        );
+
+        assert_eq!(
+            format!("{}", ErrorKind::Other),
+            "A different error occurred. The original error may contain more information"
+        );
+    }
 }

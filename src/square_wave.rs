@@ -59,3 +59,135 @@ pub trait SquareWave: Rtc {
     /// Set the frequency (without enabling/disabling)
     fn set_square_wave_frequency(&mut self, freq: SquareWaveFreq) -> Result<(), Self::Error>;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_to_hz_standard_frequencies() {
+        assert_eq!(SquareWaveFreq::Hz1.to_hz(), 1);
+        assert_eq!(SquareWaveFreq::Hz1024.to_hz(), 1024);
+        assert_eq!(SquareWaveFreq::Hz4096.to_hz(), 4096);
+        assert_eq!(SquareWaveFreq::Hz8192.to_hz(), 8192);
+        assert_eq!(SquareWaveFreq::Hz32768.to_hz(), 32768);
+    }
+
+    #[test]
+    fn test_to_hz_custom_frequencies() {
+        assert_eq!(SquareWaveFreq::Custom(0).to_hz(), 0);
+        assert_eq!(SquareWaveFreq::Custom(100).to_hz(), 100);
+        assert_eq!(SquareWaveFreq::Custom(12345).to_hz(), 12345);
+        assert_eq!(SquareWaveFreq::Custom(u32::MAX).to_hz(), u32::MAX);
+    }
+
+    #[test]
+    fn test_from_hz_standard_frequencies() {
+        assert_eq!(SquareWaveFreq::from_hz(1), SquareWaveFreq::Hz1);
+        assert_eq!(SquareWaveFreq::from_hz(1024), SquareWaveFreq::Hz1024);
+        assert_eq!(SquareWaveFreq::from_hz(4096), SquareWaveFreq::Hz4096);
+        assert_eq!(SquareWaveFreq::from_hz(8192), SquareWaveFreq::Hz8192);
+        assert_eq!(SquareWaveFreq::from_hz(32768), SquareWaveFreq::Hz32768);
+    }
+
+    #[test]
+    fn test_from_hz_custom_frequencies() {
+        assert_eq!(SquareWaveFreq::from_hz(0), SquareWaveFreq::Custom(0));
+        assert_eq!(SquareWaveFreq::from_hz(50), SquareWaveFreq::Custom(50));
+        assert_eq!(SquareWaveFreq::from_hz(2048), SquareWaveFreq::Custom(2048));
+        assert_eq!(SquareWaveFreq::from_hz(9999), SquareWaveFreq::Custom(9999));
+        assert_eq!(
+            SquareWaveFreq::from_hz(u32::MAX),
+            SquareWaveFreq::Custom(u32::MAX)
+        );
+    }
+
+    #[test]
+    fn test_round_trip_conversion() {
+        let test_frequencies = vec![
+            SquareWaveFreq::Hz1,
+            SquareWaveFreq::Hz1024,
+            SquareWaveFreq::Hz4096,
+            SquareWaveFreq::Hz8192,
+            SquareWaveFreq::Hz32768,
+            SquareWaveFreq::Custom(0),
+            SquareWaveFreq::Custom(42),
+            SquareWaveFreq::Custom(2048),
+            SquareWaveFreq::Custom(9876),
+            SquareWaveFreq::Custom(u32::MAX),
+        ];
+
+        for original_freq in test_frequencies {
+            let hz_value = original_freq.to_hz();
+            let converted_back = SquareWaveFreq::from_hz(hz_value);
+            assert_eq!(original_freq, converted_back);
+        }
+    }
+
+    #[test]
+    fn test_frequency_ordering() {
+        let frequencies = [
+            SquareWaveFreq::Hz1,
+            SquareWaveFreq::Hz1024,
+            SquareWaveFreq::Hz4096,
+            SquareWaveFreq::Hz8192,
+            SquareWaveFreq::Hz32768,
+        ];
+
+        let hz_values: Vec<u32> = frequencies.iter().map(|f| f.to_hz()).collect();
+
+        for i in 1..hz_values.len() {
+            assert!(hz_values[i] > hz_values[i - 1]);
+        }
+    }
+
+    #[test]
+    fn test_custom_frequency_edge_cases() {
+        let edge_cases = vec![
+            (0, SquareWaveFreq::Custom(0)),
+            (2, SquareWaveFreq::Custom(2)),
+            (1023, SquareWaveFreq::Custom(1023)),
+            (1025, SquareWaveFreq::Custom(1025)),
+            (4095, SquareWaveFreq::Custom(4095)),
+            (4097, SquareWaveFreq::Custom(4097)),
+            (8191, SquareWaveFreq::Custom(8191)),
+            (8193, SquareWaveFreq::Custom(8193)),
+            (32767, SquareWaveFreq::Custom(32767)),
+            (32769, SquareWaveFreq::Custom(32769)),
+        ];
+
+        for (hz, expected) in edge_cases {
+            assert_eq!(SquareWaveFreq::from_hz(hz), expected);
+            assert_eq!(expected.to_hz(), hz);
+        }
+    }
+
+    #[test]
+    fn test_standard_frequencies_are_powers_of_two() {
+        assert_eq!(SquareWaveFreq::Hz1024.to_hz(), 1024);
+        assert_eq!(SquareWaveFreq::Hz4096.to_hz(), 4096);
+        assert_eq!(SquareWaveFreq::Hz8192.to_hz(), 8192);
+        assert_eq!(SquareWaveFreq::Hz32768.to_hz(), 32768);
+
+        let freq_1024 = SquareWaveFreq::Hz1024.to_hz();
+        let freq_4096 = SquareWaveFreq::Hz4096.to_hz();
+        let freq_8192 = SquareWaveFreq::Hz8192.to_hz();
+        let freq_32768 = SquareWaveFreq::Hz32768.to_hz();
+
+        assert_eq!(freq_4096, freq_1024 * 4);
+        assert_eq!(freq_8192, freq_4096 * 2);
+        assert_eq!(freq_32768, freq_8192 * 4);
+    }
+
+    #[test]
+    fn test_custom_with_standard_values() {
+        let custom_1024 = SquareWaveFreq::Custom(1024);
+        let custom_4096 = SquareWaveFreq::Custom(4096);
+
+        assert_eq!(custom_1024.to_hz(), 1024);
+        assert_eq!(custom_4096.to_hz(), 4096);
+
+        assert_ne!(custom_1024, SquareWaveFreq::Hz1024);
+        assert_ne!(custom_4096, SquareWaveFreq::Hz4096);
+    }
+}

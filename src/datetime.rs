@@ -42,6 +42,22 @@ pub enum DateTimeError {
     InvalidYear,
 }
 
+impl core::fmt::Display for DateTimeError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            DateTimeError::InvalidMonth => write!(f, "invalid month value"),
+            DateTimeError::InvalidDay => write!(f, "invalid day value"),
+            DateTimeError::InvalidHour => write!(f, "invalid hour value"),
+            DateTimeError::InvalidMinute => write!(f, "invalid minute value"),
+            DateTimeError::InvalidSecond => write!(f, "invalid second value"),
+            DateTimeError::InvalidWeekday => write!(f, "invalid weekday value"),
+            DateTimeError::InvalidYear => write!(f, "invalid year value"),
+        }
+    }
+}
+
+impl core::error::Error for DateTimeError {}
+
 /// Date and time representation used across RTC drivers.
 ///
 /// This type represents calendar date and time in a general-purpose way,
@@ -490,6 +506,7 @@ mod tests {
         assert_eq!(Weekday::from_number(1).unwrap(), Weekday::Sunday);
         assert_eq!(Weekday::from_number(2).unwrap(), Weekday::Monday);
         assert_eq!(Weekday::from_number(7).unwrap(), Weekday::Saturday);
+        assert_eq!(Weekday::from_number(3).unwrap(), Weekday::Tuesday);
 
         assert_eq!(
             Weekday::from_number(0).unwrap_err(),
@@ -590,5 +607,132 @@ mod tests {
         // Non-leap year Feb 28 → leap year (should work)
         let mut dt = DateTime::new(2023, 2, 28, 0, 0, 0).unwrap();
         assert!(dt.set_year(2024).is_ok());
+    }
+
+    #[test]
+    fn test_display_datetime_error() {
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidMonth),
+            "invalid month value"
+        );
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidDay),
+            "invalid day value"
+        );
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidHour),
+            "invalid hour value"
+        );
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidMinute),
+            "invalid minute value"
+        );
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidSecond),
+            "invalid second value"
+        );
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidWeekday),
+            "invalid weekday value"
+        );
+        assert_eq!(
+            format!("{}", DateTimeError::InvalidYear),
+            "invalid year value"
+        );
+    }
+
+    #[test]
+    fn test_datetime_error_trait() {
+        let error = DateTimeError::InvalidMonth;
+        let _: &dyn core::error::Error = &error;
+    }
+
+    #[test]
+    fn test_boundary_values() {
+        // Test minimum valid year
+        assert!(DateTime::new(1970, 1, 1, 0, 0, 0).is_ok());
+
+        // Test maximum valid time values
+        assert!(DateTime::new(2024, 12, 31, 23, 59, 59).is_ok());
+
+        // Test minimum valid day/month
+        assert!(DateTime::new(2024, 1, 1, 0, 0, 0).is_ok());
+    }
+
+    #[test]
+    fn test_february_edge_cases() {
+        // Test February 28 in leap year
+        assert!(DateTime::new(2024, 2, 28, 0, 0, 0).is_ok());
+
+        // Test February 28 in non-leap year
+        assert!(DateTime::new(2023, 2, 28, 0, 0, 0).is_ok());
+
+        // Test February 29 in non-leap year (should fail)
+        assert_eq!(
+            DateTime::new(2023, 2, 29, 0, 0, 0).unwrap_err(),
+            DateTimeError::InvalidDay
+        );
+    }
+
+    #[test]
+    fn test_all_month_max_days() {
+        let year = 2023; // Non-leap year
+
+        // 31-day months
+        for month in [1, 3, 5, 7, 8, 10, 12] {
+            assert!(DateTime::new(year, month, 31, 0, 0, 0).is_ok());
+            assert_eq!(
+                DateTime::new(year, month, 32, 0, 0, 0).unwrap_err(),
+                DateTimeError::InvalidDay
+            );
+        }
+
+        // 30-day months
+        for month in [4, 6, 9, 11] {
+            assert!(DateTime::new(year, month, 30, 0, 0, 0).is_ok());
+            assert_eq!(
+                DateTime::new(year, month, 31, 0, 0, 0).unwrap_err(),
+                DateTimeError::InvalidDay
+            );
+        }
+    }
+
+    #[test]
+    fn test_set_day_of_month() {
+        let mut dt = DateTime::new(2024, 5, 15, 12, 30, 45).unwrap();
+
+        assert!(dt.set_day_of_month(10).is_ok());
+        assert_eq!(dt.day_of_month, 10);
+    }
+
+    #[test]
+    fn test_all_setters_preserve_state_on_error() {
+        let mut dt = DateTime::new(2024, 5, 15, 12, 30, 45).unwrap();
+        let original = dt;
+
+        // Test each setter preserves state when error occurs
+        assert!(dt.set_day_of_month(40).is_err());
+        assert_eq!(dt, original);
+
+        assert!(dt.set_minute(70).is_err());
+        assert_eq!(dt, original);
+
+        assert!(dt.set_second(70).is_err());
+        assert_eq!(dt, original);
+    }
+
+    #[test]
+    fn test_set_minute() {
+        let mut dt = DateTime::new(2024, 5, 15, 12, 30, 45).unwrap();
+
+        assert!(dt.set_minute(10).is_ok());
+        assert_eq!(dt.minute, 10);
+    }
+
+    #[test]
+    fn test_set_second() {
+        let mut dt = DateTime::new(2024, 5, 15, 12, 30, 45).unwrap();
+        assert!(dt.set_second(10).is_ok());
+        assert_eq!(dt.second, 10);
     }
 }
