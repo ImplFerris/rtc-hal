@@ -6,6 +6,7 @@
 /// Common categories of errors for RTC drivers
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
+#[non_exhaustive]
 pub enum ErrorKind {
     // Errors related to core traits
     /// Underlying bus error (I2C, SPI, etc.)
@@ -109,7 +110,7 @@ mod tests {
                 MockRtcError::InvalidRegisterAddress => ErrorKind::InvalidAddress,
                 MockRtcError::NvramAddressOutOfBounds => ErrorKind::NvramOutOfBounds,
                 MockRtcError::NvramWriteProtected => ErrorKind::NvramWriteProtected,
-                MockRtcError::UnknownError => ErrorKind::Other,
+                _ => ErrorKind::Other,
             }
         }
     }
