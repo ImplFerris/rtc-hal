@@ -12,13 +12,13 @@
 //! - Drivers are responsible for validating that all `DateTime` values provided are within the supported range of their underlying hardware (for example, some chips only support years 2000-2099).
 //! - This trait is intended for use in platform implementors and applications needing unified RTC access across hardware targets.
 //!
-//! ## For driver authors
+//! ## For application and library developers
 //!
-//! Drivers should take the `Rtc` instance as an argument to `new()`, and store it in their
+//! Applications and libraries should take the `Rtc` instance as an argument to `new()`, and store it in their
 //! struct. They **should not** take `&mut Rtc`, the trait has a blanket impl for all `&mut T`
 //! so taking just `Rtc` ensures the user can still pass a `&mut`, but is not forced to.
 //!
-//! Drivers **should not** try to enable sharing by taking `&mut Rtc` at every method.
+//! Applications and libraries **should not** try to enable sharing by taking `&mut Rtc` at every method.
 //! This is much less ergonomic than owning the `Rtc`, which still allows the user to pass an
 //! implementation that does sharing behind the scenes.
 //!
